@@ -1,4 +1,4 @@
-myFolder = "Specify frames directory";
+myFolder = "/Users/jesse/Desktop/BEP/DATA/ImageAnalysis/CrossFibre_1/d0_4/Frames";
 filePattern = fullfile(myFolder,'*.bmp');
 images = dir(filePattern);
 img_num = length(images);
@@ -30,10 +30,10 @@ if img_num > 0
 	        img_original = imread(fullFileName);
             
             % Crop Image
-            start_row = 20;
-            start_col = 384;
+            start_row = 200;
+            start_col = 244;
 
-            crop_original = img_original(start_row:360, start_col:884, :);
+            crop_original = img_original(start_row:504, start_col:884, :);
 
             imshow(crop_original)
             
@@ -41,12 +41,16 @@ if img_num > 0
             I = im2gray(crop_original);
             BW = imbinarize(I);
             BW = ~BW;
-            imshow(BW)
+            FBW = flip(BW, 1);
+            LBW = flip(FBW, 2);
+
+            imshow(LBW)
             
-            dim = size(BW);
+            dim = size(LBW);
             
             % Search X coordinate of start droplet - horizontal
-            [B] = bwboundaries(BW,'noholes');
+            [B] = bwboundaries(LBW,'noholes');
+            test = B{1,1};
             for k = 1:length(B)
                 boundary = B{k};
                 for l = 30:length(boundary)
@@ -56,23 +60,24 @@ if img_num > 0
             end
             
             % Set ver and hor 
-            vertical = any(BW, 2);
-            horizontal = any(BW, 1);
+            vertical = any(LBW, 2);
+            horizontal = any(LBW, 1);
 
             % Set max height wire
-            ywire = 187;
+            ywire = 101;
 
             % Search X coordinate of start droplet - vertical
             max = find(vertical, 1, "first");
             heightdroplet = ywire-max;
             thirdDropletY = round(ywire-(heightdroplet/3));
-            thirddroplet = find([B{1,1}(:)] == thirdDropletY, 1,"first")-12 ;
+            thirddropletxindex = find(test(:,1) == thirdDropletY, 1,"first") ;
+            thirddropletX = test(thirddropletxindex, 2);
             
             % Calc number of pixels from 1/3 dropletheight to start
-            if isempty(thirddropletx)
+            if isempty(thirddropletX)
             numberOfPixels = 35;
             else
-            numberOfPixels = round((sqrt((startDropletX-thirddropletx)^2+(ywire-thirdDropletY)^2))-7);
+            numberOfPixels = round((sqrt((startDropletX-thirddropletX)^2+(ywire-thirdDropletY)^2))-7);
             end
 
             %Boundary conditions droplet
@@ -81,18 +86,18 @@ if img_num > 0
 
             %horizontal 
             col1 = xstart-40;
-            row1 = find(BW(:,col1), 1);
+            row1 = find(LBW(:,col1), 1);
             
             %droplet
             row2 = ystart;
-            col2 = find(BW(row2,:), 1);
+            col2 = find(LBW(row2,:), 1);
             
 
-            boundary1 = bwtraceboundary(BW, [row1, col1], 'N', 8, 40);
+            boundary1 = bwtraceboundary(LBW, [row1, col1], 'N', 8, 40);
 
-            boundary2 = bwtraceboundary(BW, [row2, col2], 'E', 8, numberOfPixels, 'counter');
+            boundary2 = bwtraceboundary(LBW, [row2, col2], 'E', 8, numberOfPixels, 'counter');
 
-            figure = imshow(BW); hold on;
+            figure = imshow(LBW); hold on;
 
             plot(boundary1(:,2),boundary1(:,1),'g','LineWidth',2);
             plot(boundary2(:,2),boundary2(:,1),'b','LineWidth',2);         
