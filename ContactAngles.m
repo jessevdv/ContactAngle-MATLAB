@@ -1,4 +1,4 @@
-myFolder = "/Users/jesse/Desktop/BEP/DATA/ImageAnalysis/CrossFibre_1/d0_4/Frames";
+myFolder = "Specify Directory";
 filePattern = fullfile(myFolder,'*.bmp');
 images = dir(filePattern);
 img_num = length(images);
@@ -37,7 +37,7 @@ if img_num > 0
 
             imshow(crop_original)
             
-            %Binarize Image
+            %Binarize / flip Image
             I = im2gray(crop_original);
             BW = imbinarize(I);
             BW = ~BW;
@@ -50,7 +50,7 @@ if img_num > 0
             
             % Search X coordinate of start droplet - horizontal
             [B] = bwboundaries(LBW,'noholes');
-            test = B{1,1};
+            boundaryDouble = B{1,1};
             for k = 1:length(B)
                 boundary = B{k};
                 for l = 30:length(boundary)
@@ -63,21 +63,21 @@ if img_num > 0
             vertical = any(LBW, 2);
             horizontal = any(LBW, 1);
 
-            % Set max height wire
+            % Set height wire 
             ywire = 101;
 
             % Search X coordinate of start droplet - vertical
             max = find(vertical, 1, "first");
             heightdroplet = ywire-max;
             thirdDropletY = round(ywire-(heightdroplet/3));
-            thirddropletxindex = find(test(:,1) == thirdDropletY, 1,"first") ;
+            thirddropletxindex = find(boundaryDouble(:,1) == thirdDropletY, 1,"first") ;
             thirddropletX = test(thirddropletxindex, 2);
             
             % Calc number of pixels from 1/3 dropletheight to start
             if isempty(thirddropletX)
-            numberOfPixels = 35;
+            numberOfPixels = 35; %default value to continue the loop on error.
             else
-            numberOfPixels = round((sqrt((startDropletX-thirddropletX)^2+(ywire-thirdDropletY)^2))-7);
+            numberOfPixels = round((sqrt((startDropletX-thirddropletX)^2+(ywire-thirdDropletY)^2))-5);
             end
 
             %Boundary conditions droplet
@@ -91,7 +91,6 @@ if img_num > 0
             %droplet
             row2 = ystart;
             col2 = find(LBW(row2,:), 1);
-            
 
             boundary1 = bwtraceboundary(LBW, [row1, col1], 'N', 8, 40);
 
